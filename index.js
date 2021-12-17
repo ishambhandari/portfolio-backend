@@ -3,6 +3,7 @@ const pool = require("./db.js");
 const multer = require("multer");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 const upload = multer();
 
 const storage = multer.diskStorage({
@@ -45,6 +46,7 @@ app.post("/api/create", imageUpload.single("thumbnail"), async (req, res) => {
 app.post("/api/work-images", imageUpload.single("photos"), async (req, res) => {
   try {
     const { work_id } = req.body;
+    console.log("d", work_id);
     const { filename, path } = req.file;
     const imagePost = await pool.query(
       "INSERT INTO image_work (work_id, image_name, image_location) values($1,$2,$3)",
@@ -55,53 +57,55 @@ app.post("/api/work-images", imageUpload.single("photos"), async (req, res) => {
     console.log(error);
   }
 });
-app.post("/api/mail", async (req, res) => {
+app.post("/api/mail", imageUpload.single("photos"), async (req, res) => {
   try {
     const { name, email, message } = req.body;
+    console.log("heyu", req.body);
     const htmlOutput = `
-<p>New Contact</p>
-<ul>
-<li>Name: ${name}</li>
-<li>email: ${email}</li>
-<li>message: ${message}</li>
-</ul>
-`;
+    <p>New Contact</p>
+    <ul>
+    <li>Name: ${name}</li>
+    <li>email: ${email}</li>
+    <li>message: ${message}</li>
+    </ul>`;
 
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
-      secure: false, // true for 465, false for other ports
+      // secure: false, true for 465, false for other ports
       auth: {
-        user: "ishamafaceit@gmail.com", // generated ethereal user
-        pass: "Isham@123", // generated ethereal password
+        user: "ishambhandari007@gmail.com",
+        // generated ethereal user
+        pass: process.env.EMAIL_PASSWORD,
+
+        // generated ethereal password
       },
       tls: {
         rejectUnauthorized: false,
       },
     });
     const mailOption = {
-      from: '"Fred Foo " <ishamafaceit@gmail.com>', // sender address
-      to: "ishambhandari007@gmail.com", // list of receivers
-      subject: "Hello ✔", // Subject line
-      text: message, // plain text body
-      html: htmlOutput, // html body
+      from: `${name}`,
+      to: "ishambhandari007@gmail.com",
+      subject: "personal website contact",
+
+      text: message,
+      html: htmlOutput,
     };
 
     // send mail with defined transport object
-    let info = await transporter.sendMail(mailOption, (error, info) => {
+    transporter.sendMail(mailOption, (error, info) => {
       if (error) {
         return console.log("error", error);
       }
       console.log("message sent %s", info.messageId);
-      res.render("Email", { msg: "Successful" });
+      res.status(200).send("success");
     });
 
-    console.log("Message sent: %s", info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+    // console.log("Message sent: %s",);
 
-    // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
   } catch (error) {
     console.log("error", error);
   }
