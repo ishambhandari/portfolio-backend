@@ -3,7 +3,7 @@ const pool = require("./db.js");
 const multer = require("multer");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
-// require("dotenv").config();
+require("dotenv").config();
 const upload = multer();
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
