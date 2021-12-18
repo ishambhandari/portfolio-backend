@@ -30,14 +30,15 @@ app.use(cors({ credentials: true, origin: true }));
 // post route
 app.post("/api/create", imageUpload.single("thumbnail"), async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, code_link, live_link } = req.body;
     const { filename, path } = req.file;
     const newPost = await pool.query(
-      "INSERT INTO works (title, description, file_name, file_location) values($1,$2,$3,$4)",
-      [title, description, filename, path]
+      "INSERT INTO works (title, description, file_name, file_location, code_link, live_link) values($1,$2,$3,$4,$5,$6)",
+      [title, description, filename, path, code_link, live_link]
     );
     res.json(newPost.rows);
   } catch (error) {
+    console.log(error);
     res.status(500).send("Opps! something went wrong!");
   }
 });
@@ -117,6 +118,7 @@ app.get("/api/allworks", async (req, res) => {
     res.json(getAllWork.rows);
   } catch (error) {
     res.status(500).send("Opps! something went wrong!");
+    console.log("THIS IS ERROR", error);
   }
 });
 
